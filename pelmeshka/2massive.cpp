@@ -2,7 +2,7 @@
 #include "libs\TXLib.h"
 #include "libs\Personages.h"
 
-enum { WALL = 'X', SPACE = '-', WIN = '!', KNIFE = '|'};
+enum { WALL = 'X', SPACE = '-', WIN = '!', KNIFE = '|', NYAM = '+'};
 
 const int SIZEB = 30;
 const int MASSSIZE = 24;
@@ -23,7 +23,7 @@ void block (int x, int y, COLORREF color = TX_WHITE);
 void ReadKarta (char map [MASSLAYER][MASSSIZE][MASSSIZE], int lvl);
 void DrawKarta (int x, int y, int dx, int dy, char map[MASSLAYER][MASSSIZE][MASSSIZE], int layer, COLORREF knif);
 void MovePelByXY (int* x, int* y, int* vx, int* vy, char map [MASSLAYER][MASSSIZE][MASSSIZE], int layer);
-int MovingOn(char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer, int* pos, int x, int y);
+int MovingOn(char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer, int* pos, int x, int y, int* nyamka);
 
 //choosing color for portals here:
 const COLORREF MEOW_COLOR = TX_BLUE;
@@ -39,6 +39,7 @@ int main()
     char map [MASSLAYER][MASSSIZE][MASSSIZE] = {};
 	int lvl = 1;
 	int winlose = 0;
+	int lakomka = 0;
 
 	while (true)
 	{
@@ -54,8 +55,8 @@ int main()
 		while (true)
 		{
 
-			int whrgo = MovingOn(map, layer, &pos, x, y);
-
+			int whrgo = MovingOn(map, layer, &pos, x, y, &lakomka);
+			printf ("%d",lakomka);
 
 			switch (pos)
 			{
@@ -76,15 +77,16 @@ int main()
 
 			if (whrgo == 0) { winlose = 0;  break; }
 			else if (whrgo == 1) { winlose = 1;  break; }
+			
 		}
 		txEnd();
-		if (winlose == 0) txMessageBox ("LOSSE", "LOSSE2");
+		if (winlose == 0) { txMessageBox("LOSSE", "LOSSE2"); lakomka = 0; }
 		if (winlose == 1) {txMessageBox("WINNY", "WINNY2"); lvl++;}
 	}
 
 }
  
-int MovingOn (/* const */char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer, int* pos, int x, int y)
+int MovingOn (/* const */char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer, int* pos, int x, int y, int* nyamka)
     {
 
 
@@ -120,7 +122,11 @@ int MovingOn (/* const */char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer,
          else if (allMap [layer][YM][XM] == 'y') *pos = 3;
          else if (allMap [layer][YM][XM] == 'z') *pos = 4;
 
-
+		 if (allMap[layer][YM][XM] == NYAM)
+		 {
+			 allMap[layer][YM][XM] = SPACE;
+			 *nyamka = *nyamka += 1;
+		 }
 
 
 
@@ -198,6 +204,7 @@ void DrawKarta (int x0, int y0, int dx, int dy, char map [MASSLAYER][MASSSIZE][M
             if (map [layer][y][x] == WALL)  block (x0 + x * dx, y0 + y * dy, TX_WHITE);
             if (map [layer][y][x] == WIN)   block (x0 + x * dx, y0 + y * dy, TX_LIGHTBLUE);
 			if (map [layer][y][x] == KNIFE) block (x0 + x * dx, y0 + y * dy, knif);
+			if (map [layer][y][x] == NYAM)  block(x0 + x * dx, y0 + y * dy, TX_RED);
 
             if (map [layer][y][x] == 'w'  ||
                 map [layer][y][x] == 'v'  ||

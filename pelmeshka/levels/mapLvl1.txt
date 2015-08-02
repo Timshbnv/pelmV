@@ -1,8 +1,8 @@
 MEOW 1.0 24 24
 XXXXXXXXXXXXXXXXXXXXXXXX
-X--|----------------XX-X
-X-XXXXXXXXX-XXXXXXX-XX-X
-X-X--------------XX-XX-X
+X--|---------------+XX-X
+X-XXXXXXXXX-XXXXXXX+XX-X
+X-X--------------XX+XX-X
 X-XXXXXXXXX-XXXX-------X
 X--------XX----XXXXXXX-X
 XXXXXXXX-XX-XX-XX----X-X
@@ -12,7 +12,7 @@ X-XX--X-XXXX-XXX--XXXX-X
 X----XX--------XXXX--X-X
 XXXXXXX-XXXXXX-------X-X
 X-------X----XXXXXXX-X-X
-X-XXXXXXX-XX-------X-X-X
+X-XXXXX-X-XX-------X-X-X
 X-X-----X-XXXXXXXX-X-X-X
 X-X-XXX-X-X--------X-X-X
 X-X-XXX---XXXXXXXX-X-X-X
