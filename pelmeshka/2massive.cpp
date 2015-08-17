@@ -21,9 +21,10 @@ const int MASSLEVEL = 2;
 
 void block (int x, int y, COLORREF color = TX_WHITE);
 void ReadKarta (char map [MASSLAYER][MASSSIZE][MASSSIZE], int lvl);
-void DrawKarta (int x, int y, int dx, int dy, char map[MASSLAYER][MASSSIZE][MASSSIZE], int layer, COLORREF knif);
+void DrawKarta (int x0, int y0, int dx, int dy, char map[MASSLAYER][MASSSIZE][MASSSIZE], int layer, HDC FoodIMG, HDC WallIMG, HDC DoorIMG, HDC FloorIMG, HDC KnifIMG);
 void MovePelByXY (int* x, int* y, int* vx, int* vy, char map [MASSLAYER][MASSSIZE][MASSSIZE], int layer);
 int MovingOn(char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer, int* pos, int x, int y, int* nyamka);
+void Xfor (int koor, int how);
 
 //choosing color for portals here:
 const COLORREF MEOW_COLOR = TX_BLUE;
@@ -34,6 +35,8 @@ const COLORREF MEOW_COLOR = TX_BLUE;
 
 int main()
     {
+
+	
 
     txCreateWindow (MASSSIZE * SIZEB, MASSSIZE * SIZEB);
     char map [MASSLAYER][MASSSIZE][MASSSIZE] = {};
@@ -46,7 +49,7 @@ int main()
 
 
 		ReadKarta(map, lvl);
-		
+
 		int layer = 0;
 		int pos = 1;
 		int x = SIZEB * 4 - SIZEB / 2;
@@ -77,7 +80,7 @@ int main()
 
 			if (whrgo == 0) { winlose = 0;  break; }
 			else if (whrgo == 1) { winlose = 1;  break; }
-			
+
 		}
 		txEnd();
 		if (winlose == 0) { txMessageBox("LOSSE", "LOSSE2"); lakomka = 0; }
@@ -85,15 +88,21 @@ int main()
 	}
 
 }
- 
+
 int MovingOn (/* const */char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer, int* pos, int x, int y, int* nyamka)
     {
 
+	HDC WallImage = txLoadImage("images/DoorMetall.bmp");
+	HDC DoorImage = txLoadImage("images/spinportal.bmp");
+	HDC FloorImage = txLoadImage("images/plitkafloor.bmp");
+	HDC FoodImage = txLoadImage("images/edaplitka.bmp");
+	HDC KnifeImage = txLoadImage("images/plasma-bulb.bmp");
 
+	int vy = 0;
     int vx = 0;
-    int vy = 0;
     int t = 0;
 	int colo = TX_BLACK;
+	HDC KNIF = KnifeImage;
 
     txBegin ();
 
@@ -105,12 +114,12 @@ int MovingOn (/* const */char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer,
          txSetFillColor (MEOW_COLOR);
          txClear();
 
-         DrawKarta (0, 0, 1 * SIZEB, 1 * SIZEB, allMap, layer, colo);
+         DrawKarta (0, 0, 1 * SIZEB, 1 * SIZEB, allMap, layer, FoodImage, WallImage, DoorImage, FloorImage, KNIF);
 
 		 if (t % 16 == 1)
-		 {	 
-			 if (colo == TX_BLACK) colo = TX_GREEN;
-			 else if (colo == TX_GREEN) colo = TX_BLACK;
+		 {
+			 if (KNIF == KnifeImage) KNIF = FloorImage;
+			 else if (KNIF == FloorImage) KNIF = KnifeImage;
 		 }
 
          MovePelByXY (&x, &y, &vx, &vy, allMap, layer);
@@ -136,18 +145,22 @@ int MovingOn (/* const */char allMap [MASSLAYER][MASSSIZE][MASSSIZE], int layer,
          if (allMap [layer][YM][XM] == 'B') return 3;
          if (allMap [layer][YM][XM] == 'C') return 4;
 
-		 if (allMap[layer][YM][XM] == KNIFE)
-		 {
-			 if (colo == TX_GREEN) return 0;
-		 }
+		 if (allMap[layer][YM][XM] == KNIFE) 
+			 if (KNIF == KnifeImage) return 0;
+		 
 
          t++;
          txSleep (30);
         }
-	 
+
 
 
     txEnd();
+	txDeleteDC (WallImage);
+	txDeleteDC (DoorImage);
+	txDeleteDC (FloorImage);
+	txDeleteDC (FoodImage);
+	txDeleteDC (KnifeImage);
     }
 
 void ReadKarta (char map [MASSLAYER][MASSSIZE][MASSSIZE], int lvl)
@@ -194,30 +207,30 @@ void ReadKarta (char map [MASSLAYER][MASSSIZE][MASSSIZE], int lvl)
     }
 
 
-void DrawKarta (int x0, int y0, int dx, int dy, char map [MASSLAYER][MASSSIZE][MASSSIZE], int layer, COLORREF knif)
+void DrawKarta (int x0, int y0, int dx, int dy, char map [MASSLAYER][MASSSIZE][MASSSIZE], int layer, HDC FoodIMG, HDC WallIMG, HDC DoorIMG, HDC FloorIMG, HDC KnifIMG)
     {
 
     for (int y = 0; y < MASSSIZE; y++ )
         for (int x = 0; x < MASSSIZE; x++ )
             {
-            if (map [layer][y][x] == SPACE) block (x0 + x * dx, y0 + y * dy, TX_BLACK);
-            if (map [layer][y][x] == WALL)  block (x0 + x * dx, y0 + y * dy, TX_WHITE);
+            if (map [layer][y][x] == SPACE) txBitBlt(txDC(), x0 + x * dx, y0 + y * dy, x0 + x * dx + SIZEB, y0 + y * dy + SIZEB, FloorIMG, 0, 0);
+            if (map [layer][y][x] == WALL)  txBitBlt(txDC(), x0 + x * dx, y0 + y * dy, x0 + x * dx + SIZEB, y0 + y * dy + SIZEB, WallIMG, 0, 0);
             if (map [layer][y][x] == WIN)   block (x0 + x * dx, y0 + y * dy, TX_LIGHTBLUE);
-			if (map [layer][y][x] == KNIFE) block (x0 + x * dx, y0 + y * dy, knif);
-			if (map [layer][y][x] == NYAM)  block(x0 + x * dx, y0 + y * dy, TX_RED);
+			if (map [layer][y][x] == KNIFE) txBitBlt(txDC(), x0 + x * dx, y0 + y * dy, x0 + x * dx + SIZEB, y0 + y * dy + SIZEB, KnifIMG, 0, 0);
+			if (map [layer][y][x] == NYAM)  txBitBlt(txDC(), x0 + x * dx, y0 + y * dy, x0 + x * dx + SIZEB, y0 + y * dy + SIZEB, FoodIMG, 0, 0);
 
             if (map [layer][y][x] == 'w'  ||
                 map [layer][y][x] == 'v'  ||
                 map [layer][y][x] == 'y'  ||
-                map [layer][y][x] == 'z') block (x0 + x * dx, y0 + y * dy, TX_BLACK);
+                map [layer][y][x] == 'z') txBitBlt(txDC(), x0 + x * dx, y0 + y * dy, x0 + x * dx + SIZEB, y0 + y * dy + SIZEB, FloorIMG, 0, 0);
 
 
 
 
-            /*if (map [layer][y][x] == 'A')   block (x0 + x * dx, y0 + y * dy, TX_ORANGE);
-            if (map [layer][y][x] == 'B')   block (x0 + x * dx, y0 + y * dy, TX_PINK);
-            if (map [layer][y][x] == 'C')   block (x0 + x * dx, y0 + y * dy, TX_YELLOW);
-            */
+            if (map [layer][y][x] == 'A' ||
+                map [layer][y][x] == 'B' ||
+                map [layer][y][x] == 'C')  txBitBlt(txDC(), x0 + x * dx, y0 + y * dy, x0 + x * dx + SIZEB, y0 + y * dy + SIZEB, DoorIMG, 0, 0);
+            
             }
     }
 
@@ -228,25 +241,48 @@ void DrawKarta (int x0, int y0, int dx, int dy, char map [MASSLAYER][MASSSIZE][M
 
 
 
-void MovePelByXY (int* x, int* y, int* vx, int* vy, char map [MASSLAYER][MASSSIZE][MASSSIZE], int layer)
+void MovePelByXY(int* x, int* y, int* vx, int* vy, char map[MASSLAYER][MASSSIZE][MASSSIZE], int layer)
 
-    {
-     *x = *vx * 1 + *x;
-     *y = *vy * 1 + *y;
+{
+#define RIGHTY GetAsyncKeyState(VK_RIGHT)
+#define LEFTY  GetAsyncKeyState(VK_LEFT)
+#define DOWNY  GetAsyncKeyState(VK_DOWN)
+#define UPPY   GetAsyncKeyState(VK_UP)
 
-     *vy = *vy * 0.8;
-     *vx = *vx * 0.8;
+	*x = *vx * 1 + *x;
+	*y = *vy * 1 + *y;
 
-     // printf ("x = %d, x/SIZEB = %d + %lg\n", *x, *x/SIZEB, *x/SIZEB - round (*x/SIZEB));
-
-     if (GetAsyncKeyState (VK_RIGHT) && map [layer][ROUND (*y/SIZEB)]     [ROUND (*x/SIZEB + 1)] != WALL) *vx += 2;
-     if (GetAsyncKeyState (VK_LEFT)  && map [layer][ROUND (*y/SIZEB)]     [ROUND (*x/SIZEB - 1)] != WALL) *vx -= 2;
-     if (GetAsyncKeyState (VK_DOWN)  && map [layer][ROUND (*y/SIZEB + 1)] [ROUND (*x/SIZEB)]     != WALL) *vy += 2;
-     if (GetAsyncKeyState (VK_UP)    && map [layer][ROUND (*y/SIZEB - 1)] [ROUND (*x/SIZEB)]     != WALL) *vy -= 2;
-
-    }
+	*vy = *vy * 0.8;
+	*vx = *vx * 0.8;
 
 
+
+	if (RIGHTY && map[layer][*y / SIZEB][*x / SIZEB + 1] != WALL) *vx += 2;
+	else if (LEFTY && map[layer][*y / SIZEB][*x / SIZEB - 1] != WALL) *vx -= 2;
+	else if (DOWNY && map[layer][*y / SIZEB + 1][*x / SIZEB] != WALL) *vy += 2;
+	else if (UPPY && map[layer][*y / SIZEB - 1][*x / SIZEB] != WALL) *vy -= 2;
+
+	if (*vx > 0) if (map[layer][*y / SIZEB][(*x + 14) / SIZEB] == WALL) *vx = -*vx;
+	if (*vx < 0) if (map[layer][*y / SIZEB][(*x - 14) / SIZEB] == WALL) *vx = -*vx;
+	if (*vy > 0) if (map[layer][(*y + 14) / SIZEB][*x / SIZEB] == WALL) *vy = -*vy;
+	if (*vy < 0) if (map[layer][(*y - 14) / SIZEB][*x / SIZEB] == WALL) *vy = -*vy;
+
+
+//	if (RIGHTY && UPPY || RIGHTY && DOWNY)
+
+
+
+}
+
+void Xfor(int koor, int how)
+{
+	for (int i = 0; i < 5; i++)
+	{
+		koor = koor + how;
+		txSleep(6);
+	}
+
+}
 
 void block (int x, int y, COLORREF color)
     {
